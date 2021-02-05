@@ -1476,7 +1476,7 @@ class WC_Gateway_PayPal_Express_AngellEYE extends WC_Payment_Gateway {
             ),
             'enable_fraudnet_integration' => array(
                 'title' => __('Enable FraudNet Integration', 'paypal-for-woocommerce'),
-                'label' => __('Enable FraudNet Integration', 'paypal-for-woocommerce'),
+                'label' => __('FraudNet Protection Integration (only required for Reference Transactions.)', 'paypal-for-woocommerce'),
                 'type' => 'checkbox',
                 'description' => __('FraudNet is a JavaScript library developed by PayPal and embedded into a merchant’s web page to collect browser-based data to help reduce fraud. Upon checkout, these data elements are sent directly to PayPal Risk Services for fraud and risk assessment.','paypal-for-woocommerce'),
                 'default' => 'no',
@@ -1486,8 +1486,10 @@ class WC_Gateway_PayPal_Express_AngellEYE extends WC_Payment_Gateway {
             'fraudnet_swi' => array(
                 'title' => __('Source Website Identifier', 'paypal-for-woocommerce'),
                 'type' => 'text',
-                'description' => __('This field is now required to be filled in for all new PayPal Express Checkout users. Existing users who already have Reference Transactions enabled are not required to use Fraudnet protection and an SWI (Source Website Identifier), although to take advantage of Fraudnet protection, you will be required to add one in.', 'paypal-for-woocommerce'),
-                'default' => ''
+                'description' => __('This field is now required to be filled in for all new PayPal Express Checkout merchants. Existing users who already have Reference Transactions enabled are not required to use Fraudnet protection and an SWI (Source Website Identifier), although to take advantage of Fraudnet protection, you will be required to add one in. PayPal support will provide you with your personal source Website Identifier.', 'paypal-for-woocommerce'),
+                'default' => '',
+                'css' => 'min-width: 440px;',
+                'placeholder' => __('Your Personal source Website Identifier (provided by PayPal support.)', ''),
             ),
             'seller_protection' => array(
                 'title' => __('Seller Protection', 'paypal-for-woocommerce'),
@@ -3553,6 +3555,29 @@ class WC_Gateway_PayPal_Express_AngellEYE extends WC_Payment_Gateway {
         require_once( PAYPAL_FOR_WOOCOMMERCE_PLUGIN_DIR . '/angelleye-includes/express-checkout/class-wc-gateway-paypal-express-request-angelleye.php' );
         $paypal_express_request = new WC_Gateway_PayPal_Express_Request_AngellEYE($this);
         $paypal_express_request->angelleye_get_paldetails($this);
+    }
+    
+    public function get_saved_payment_method_option_html( $token ) {
+        $html = sprintf(
+                '<li class="woocommerce-SavedPaymentMethods-token">
+                        <input id="wc-%1$s-payment-token-%2$s" type="radio" name="wc-%1$s-payment-token" value="%2$s" style="width:auto;" class="woocommerce-SavedPaymentMethods-tokenInput" %4$s />
+                        <label for="wc-%1$s-payment-token-%2$s">%3$s</label>
+                </li>',
+                esc_attr( $this->id ),
+                esc_attr( $token->get_id() ),
+                esc_html( $this->angelleye_get_display_name($token) ),
+                checked( $token->is_default(), true, false )
+        );
+        return apply_filters( 'woocommerce_payment_gateway_get_saved_payment_method_option_html', $html, $token, $this );
+    }
+    
+    public function angelleye_get_display_name( $token ) {
+        $display = sprintf(
+                __( '%1$s ending in %2$s', 'paypal-for-woocommerce' ),
+                $token->get_card_type(),
+                $token->get_last4()
+        );
+        return $display;
     }
 
 }
